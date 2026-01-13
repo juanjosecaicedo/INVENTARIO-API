@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        h1, h2 { color: #333; }
+        form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input { display: block; width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .btn-delete { background-color: #dc3545; }
+        .btn-delete:hover { background-color: #c82333; }
+        .btn-edit { background-color: #ffc107; color: black; margin-right: 5px; }
+        .btn-edit:hover { background-color: #e0a800; }
+    </style>
+</head>
+<body>
+
+    <h1>Gestión de Inventario</h1>
+
+    <div id="articulo-form">
+        <h2 id="form-title">Agregar Artículo</h2>
+        <input type="hidden" id="edit-mode" value="false">
+        <input type="number" id="codigo" placeholder="Código Numérico" required>
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="text" id="marca" placeholder="Marca" required>
+        <input type="number" id="unidades" placeholder="Unidades" required>
+        <input type="text" id="nombre_bodega" placeholder="Nombre de Bodega" required>
+        <button id="submit-btn" onclick="guardarArticulo()">Guardar</button>
+        <button id="cancel-btn" style="display:none; background-color: #6c757d;" onclick="cancelarEdicion()">Cancelar</button>
+    </div>
+
+    <h2>Listado de Artículos</h2>
+    <table id="articulos-table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Marca</th>
+                <th>Unidades</th>
+                <th>Bodega</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Los artículos se cargarán aquí -->
+        </tbody>
+    </table>
+
+    <script>
+        const API_URL = 'http://localhost:8000/articulos/';
+
+        async function cargarArticulos() {
+            try {
+                const response = await fetch(API_URL);
+                const articulos = await response.json();
+                const tbody = document.querySelector('#articulos-table tbody');
+                tbody.innerHTML = '';
+                articulos.forEach(art => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${art.codigo}</td>
+                        <td>${art.nombre}</td>
+                        <td>${art.marca}</td>
+                        <td>${art.unidades}</td>
+                        <td>${art.nombre_bodega}</td>
+                        <td>
+                            <button class="btn-edit" onclick="editarArticulo(${art.codigo}, '${art.nombre}', '${art.marca}', ${art.unidades}, '${art.nombre_bodega}')">Editar</button>
+                            <button class="btn-delete" onclick="eliminarArticulo(${art.codigo})">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error al cargar artículos:', error);
+            }
+        }
+
+        async function guardarArticulo() {
+            const codigo = document.getElementById('codigo').value;
+            const nombre = document.getElementById('nombre').value;
+            const marca = document.getElementById('marca').value;
+            const unidades = document.getElementById('unidades').value;
+            const nombre_bodega = document.getElementById('nombre_bodega').value;
+            const isEdit = document.getElementById('edit-mode').value === 'true';
+
+            const articulo = { codigo: parseInt(codigo), nombre, marca, unidades: parseInt(unidades), nombre_bodega };
+
+            try {
+                let response;
+                if (isEdit) {
+                    response = await fetch(`${API_URL}${codigo}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(articulo)
+                    });
+                } else {
+                    response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(articulo)
+                    });
+                }
+
+                if (response.ok) {
+                    limpiarFormulario();
+                    cargarArticulos();
+                    if(isEdit) cancelarEdicion();
+                } else {
+                    const err = await response.json();
+                    alert('Error: ' + err.detail);
+                }
+            } catch (error) {
+                console.error('Error al guardar artículo:', error);
+            }
+        }
+
+        async function eliminarArticulo(codigo) {
+            if (confirm('¿Está seguro de eliminar este artículo?')) {
+                try {
+                    const response = await fetch(`${API_URL}${codigo}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        cargarArticulos();
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar artículo:', error);
+                }
+            }
+        }
+
+        function editarArticulo(codigo, nombre, marca, unidades, nombre_bodega) {
+            document.getElementById('codigo').value = codigo;
+            document.getElementById('codigo').disabled = true;
+            document.getElementById('nombre').value = nombre;
+            document.getElementById('marca').value = marca;
+            document.getElementById('unidades').value = unidades;
+            document.getElementById('nombre_bodega').value = nombre_bodega;
+            
+            document.getElementById('edit-mode').value = 'true';
+            document.getElementById('form-title').innerText = 'Modificar Artículo';
+            document.getElementById('submit-btn').innerText = 'Actualizar';
+            document.getElementById('cancel-btn').style.display = 'inline-block';
+        }
+
+        function cancelarEdicion() {
+            limpiarFormulario();
+            document.getElementById('codigo').disabled = false;
+            document.getElementById('edit-mode').value = 'false';
+            document.getElementById('form-title').innerText = 'Agregar Artículo';
+            document.getElementById('submit-btn').innerText = 'Guardar';
+            document.getElementById('cancel-btn').style.display = 'none';
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('codigo').value = '';
+            document.getElementById('nombre').value = '';
+            document.getElementById('marca').value = '';
+            document.getElementById('unidades').value = '';
+            document.getElementById('nombre_bodega').value = '';
+        }
+
+        window.onload = cargarArticulos;
+    </script>
+</body>
+</html>

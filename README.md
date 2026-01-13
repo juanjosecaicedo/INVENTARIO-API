@@ -5,18 +5,33 @@ Esta es una API Rest completa para la gestión de artículos de un inventario, c
 ## Requisitos
 
 - Python 3.7+
-- FastAPI
-- SQLModel
-- Uvicorn (para correr el servidor)
-- Requests (para correr el ejemplo de cliente Python)
+- Dependencias listadas en `requirements.txt`
 
 ## Instalación
 
-1. Instalar las dependencias necesarias:
+1. Clonar el repositorio.
+2. Instalar las dependencias necesarias:
 
 ```bash
-pip install fastapi sqlmodel uvicorn requests
+pip install -r requirements.txt
 ```
+
+3. Configurar las variables de entorno:
+   - Copiar `.env.example` a `.env` y ajustar los valores si es necesario.
+
+## Configuración (Variables de Entorno)
+
+La aplicación utiliza variables de entorno para su configuración. Puedes crear un archivo `.env` en la raíz del proyecto con el siguiente contenido:
+
+```env
+DATABASE_URL=sqlite:///database.db
+PORT=8000
+HOST=0.0.0.0
+```
+
+- `DATABASE_URL`: URL de conexión a la base de datos (por defecto SQLite).
+- `PORT`: Puerto en el que correrá la API.
+- `HOST`: Dirección de escucha (0.0.0.0 para todas las interfaces).
 
 ## Ejecución de la API
 

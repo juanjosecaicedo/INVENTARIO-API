@@ -55,7 +55,9 @@
     </table>
 
     <script>
-        const API_URL = 'http://localhost:8000/articulos/';
+        // Si el frontend se sirve desde el mismo servidor que la API,
+        // podemos usar una ruta relativa para que funcione tanto en local como en el servidor.
+        const API_URL = window.location.origin + '/articulos/';
 
         async function cargarArticulos() {
             try {

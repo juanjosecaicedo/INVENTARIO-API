@@ -1,7 +1,15 @@
+import os
 import requests
 import json
+from dotenv import load_dotenv
 
-BASE_URL = "http://localhost:8000/articulos/"
+# Cargar variables de entorno
+load_dotenv()
+
+# Obtener URL base de las variables de entorno o usar local por defecto
+HOST = os.getenv("HOST", "localhost")
+PORT = os.getenv("PORT", "8000")
+BASE_URL = f"http://{HOST}:{PORT}/articulos/"
 
 def agregar_articulo(codigo, nombre, marca, unidades, bodega):
     data = {

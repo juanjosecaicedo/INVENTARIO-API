@@ -1,8 +1,13 @@
+import os
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import FileResponse
 from sqlmodel import Field, SQLModel, Session, create_engine, select
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# Cargar variables de entorno
+load_dotenv()
 
 # Modelo de Datos
 class Articulo(SQLModel, table=True):
@@ -14,8 +19,7 @@ class Articulo(SQLModel, table=True):
     nombre_bodega: str
 
 # Configuración de la Base de Datos
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+sqlite_url = os.getenv("DATABASE_URL", "sqlite:///database.db")
 
 engine = create_engine(sqlite_url, echo=True)
 
@@ -106,4 +110,6 @@ def eliminar_articulo(codigo: int, session: Session = Depends(get_session)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    host = os.getenv("HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=port)
